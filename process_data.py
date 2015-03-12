@@ -1,8 +1,10 @@
-import numpy as np
 import cPickle
+import re
+import sys
 from collections import defaultdict
-import sys, re
-import pandas as pd
+from operator import itemgetter
+
+import numpy as np
 
 
 def _read_lines(file_name):
@@ -124,7 +126,7 @@ if __name__=="__main__":
     data_folder = [("rt-polarity.pos", 1), ("rt-polarity.neg", 0)]
     print "loading data...",
     revs, vocab = build_data_cv(data_folder, cv=10, clean_string=True)
-    max_l = np.max(pd.DataFrame(revs)["num_words"])
+    max_l = np.max(map(itemgetter("num_words"), revs))
     print "data loaded!"
     print "number of sentences: " + str(len(revs))
     print "vocab size: " + str(len(vocab))
