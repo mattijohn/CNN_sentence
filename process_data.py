@@ -4,48 +4,45 @@ from collections import defaultdict
 import sys, re
 import pandas as pd
 
+
+def _read_lines(file_name):
+    """Generator to read lines from a file"""
+    with open(file_name, "rb") as f:
+        for line in f:
+            yield line
+
+
+def _process_line(line, sentiment, vocab, cv, clean_string=True):
+    """Process a line from a file"""
+    line = line.strip()
+    if clean_string:
+        line = clean_str(line)
+    else:
+        line = line.lower()
+
+    words = line.split()
+    unique_words = set(words)
+
+    for word in unique_words:
+        vocab[word] += 1
+
+    return {"y": sentiment,
+            "text": line,
+            "num_words": len(words),
+            "split": np.random.randint(0, cv)}
+
+
 def build_data_cv(data_folder, cv=10, clean_string=True):
     """
     Loads data and split into 10 folds.
     """
-    revs = []
-    pos_file = data_folder[0]
-    neg_file = data_folder[1]
     vocab = defaultdict(float)
-    with open(pos_file, "rb") as f:
-        for line in f:       
-            rev = []
-            rev.append(line.strip())
-            if clean_string:
-                orig_rev = clean_str(" ".join(rev))
-            else:
-                orig_rev = " ".join(rev).lower()
-            words = set(orig_rev.split())
-            for word in words:
-                vocab[word] += 1
-            datum  = {"y":1, 
-                      "text": orig_rev,                             
-                      "num_words": len(orig_rev.split()),
-                      "split": np.random.randint(0,cv)}
-            revs.append(datum)
-    with open(neg_file, "rb") as f:
-        for line in f:       
-            rev = []
-            rev.append(line.strip())
-            if clean_string:
-                orig_rev = clean_str(" ".join(rev))
-            else:
-                orig_rev = " ".join(rev).lower()
-            words = set(orig_rev.split())
-            for word in words:
-                vocab[word] += 1
-            datum  = {"y":0, 
-                      "text": orig_rev,                             
-                      "num_words": len(orig_rev.split()),
-                      "split": np.random.randint(0,cv)}
-            revs.append(datum)
+    revs = [_process_line(line, sentiment, vocab, cv, clean_string)
+            for f, sentiment in data_folder for line in _read_lines(f)]
+
     return revs, vocab
-    
+
+
 def get_W(word_vecs, k=300):
     """
     Get word matrix. W[i] is the vector for word indexed by i
@@ -122,10 +119,10 @@ def clean_str_sst(string):
     string = re.sub(r"\s{2,}", " ", string)    
     return string.strip().lower()
 
-if __name__=="__main__":    
-    w2v_file = sys.argv[1]     
-    data_folder = ["rt-polarity.pos","rt-polarity.neg"]    
-    print "loading data...",        
+if __name__=="__main__":
+    w2v_file = sys.argv[1]
+    data_folder = [("rt-polarity.pos", 1), ("rt-polarity.neg", 0)]
+    print "loading data...",
     revs, vocab = build_data_cv(data_folder, cv=10, clean_string=True)
     max_l = np.max(pd.DataFrame(revs)["num_words"])
     print "data loaded!"
