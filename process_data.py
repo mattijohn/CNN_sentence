@@ -51,7 +51,7 @@ def get_W(word_vecs, k=300):
     """
     vocab_size = len(word_vecs)
     word_idx_map = dict()
-    W = np.zeros(shape=(vocab_size+1, k))            
+    W = np.zeros(shape=(vocab_size+1, k))
     W[0] = np.zeros(k)
     i = 1
     for word in word_vecs:
@@ -59,6 +59,7 @@ def get_W(word_vecs, k=300):
         word_idx_map[word] = i
         i += 1
     return W, word_idx_map
+
 
 def load_bin_vec(fname, vocab):
     """
@@ -77,51 +78,56 @@ def load_bin_vec(fname, vocab):
                     word = ''.join(word)
                     break
                 if ch != '\n':
-                    word.append(ch)   
+                    word.append(ch)
             if word in vocab:
-               word_vecs[word] = np.fromstring(f.read(binary_len), dtype='float32')  
+                word_vecs[word] = np.fromstring(f.read(binary_len),
+                                                dtype='float32')
             else:
                 f.read(binary_len)
     return word_vecs
 
+
 def add_unknown_words(word_vecs, vocab, min_df=1, k=300):
     """
-    For words that occur in at least min_df documents, create a separate word vector.    
-    0.25 is chosen so the unknown vectors have (approximately) same variance as pre-trained ones
+    For words that occur in at least min_df documents, create a separate word
+    vector.  0.25 is chosen so the unknown vectors have (approximately) same
+    variance as pre-trained ones
     """
     for word in vocab:
         if word not in word_vecs and vocab[word] >= min_df:
-            word_vecs[word] = np.random.uniform(-0.25,0.25,k)  
+            word_vecs[word] = np.random.uniform(-0.25, 0.25, k)
+
 
 def clean_str(string, TREC=False):
     """
     Tokenization/string cleaning for all datasets except for SST.
     Every dataset is lower cased except for TREC
     """
-    string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", string)     
-    string = re.sub(r"\'s", " \'s", string) 
-    string = re.sub(r"\'ve", " \'ve", string) 
-    string = re.sub(r"n\'t", " n\'t", string) 
-    string = re.sub(r"\'re", " \'re", string) 
-    string = re.sub(r"\'d", " \'d", string) 
-    string = re.sub(r"\'ll", " \'ll", string) 
-    string = re.sub(r",", " , ", string) 
-    string = re.sub(r"!", " ! ", string) 
-    string = re.sub(r"\(", " \( ", string) 
-    string = re.sub(r"\)", " \) ", string) 
-    string = re.sub(r"\?", " \? ", string) 
-    string = re.sub(r"\s{2,}", " ", string)    
+    string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", string)
+    string = re.sub(r"\'s", " \'s", string)
+    string = re.sub(r"\'ve", " \'ve", string)
+    string = re.sub(r"n\'t", " n\'t", string)
+    string = re.sub(r"\'re", " \'re", string)
+    string = re.sub(r"\'d", " \'d", string)
+    string = re.sub(r"\'ll", " \'ll", string)
+    string = re.sub(r",", " , ", string)
+    string = re.sub(r"!", " ! ", string)
+    string = re.sub(r"\(", " \( ", string)
+    string = re.sub(r"\)", " \) ", string)
+    string = re.sub(r"\?", " \? ", string)
+    string = re.sub(r"\s{2,}", " ", string)
     return string.strip() if TREC else string.strip().lower()
+
 
 def clean_str_sst(string):
     """
     Tokenization/string cleaning for the SST dataset
     """
-    string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", string)   
-    string = re.sub(r"\s{2,}", " ", string)    
+    string = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", string)
+    string = re.sub(r"\s{2,}", " ", string)
     return string.strip().lower()
 
-if __name__=="__main__":
+if __name__ == "__main__":
     w2v_file = sys.argv[1]
     data_folder = [("rt-polarity.pos", 1), ("rt-polarity.neg", 0)]
     print "loading data...",
@@ -142,4 +148,3 @@ if __name__=="__main__":
     W2, _ = get_W(rand_vecs)
     cPickle.dump([revs, W, W2, word_idx_map, vocab], open("mr.p", "wb"))
     print "dataset created!"
-    
